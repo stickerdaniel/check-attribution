@@ -35,6 +35,16 @@ class CleanPullRequestTests(RemoteTestCase):
         self.assertNotIn("::error", result.stdout)
         self.assertEqual(os.listdir(self.remote.runner_temp), [])
 
+    def test_linked_disclosure_passes(self) -> None:
+        head = self.remote.commit("Add x", files={"x.txt": "x\n"})
+        self.remote.open_pull_request(head)
+        body = _ATTRIBUTION.replace("via T3 Code.", "via [T3 Code](https://app.t3.codes/threads/e/t).")
+
+        result = self.remote.run_action(self.remote.event(head=head, body=body))
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("0 errors, 0 warnings", result.stdout)
+
     def test_commits_with_an_empty_diff_pass(self) -> None:
         self.remote.commit("Add x", files={"x.txt": "x\n"})
         (self.remote.work / "x.txt").unlink()
@@ -96,6 +106,35 @@ class RuleTests(RemoteTestCase):
         result = self._run(head, body="Done.\r\n\r\nCo-authored-by: Claude <noreply@anthropic.com>\r\n")
         self.assertEqual(result.returncode, 1)
         self.assertIn("::error title=Bot co-author trailer in the PR body::", result.stdout)
+
+    def test_linked_disclosure_keeps_trailer_and_identity_checks(self) -> None:
+        trailer = "Co-authored-by: Claude <noreply@anthropic.com>"
+        head = self.remote.commit(f"Add x\n\n{trailer}\n", GIT_AUTHOR_EMAIL=CLAUDE)
+        disclosure = _ATTRIBUTION.replace("via T3 Code.", "via [T3 Code](https://app.t3.codes/threads/e/t).")
+        for prefix in (trailer, f"[Details\n{trailer}\n](https://example.com)"):
+            with self.subTest(prefix=prefix):
+                result = self._run(head, body=f"{prefix}\n\n{disclosure}")
+                self.assertEqual(result.returncode, 1, result.stdout)
+                for title in (
+                    "Bot co-author trailer in the PR body",
+                    "Bot co-author trailer in a commit",
+                    "Bot commit author",
+                ):
+                    self.assertIn(f"::error title={title}::", result.stdout)
+                self.assertNotIn("PR model attribution required", result.stdout)
+
+    def test_link_text_and_destination_keep_unicode_checks(self) -> None:
+        head = self.remote.commit("Add x", files={"x.txt": "x\n"})
+        for link in (
+            "[T3\u200b Code](https://app.t3.codes/threads/e/t)",
+            "[T3 Code](https://app.t3.codes/threads/e/\u200bt)",
+        ):
+            with self.subTest(link=link):
+                body = _ATTRIBUTION.replace("via T3 Code.", f"via {link}.")
+                result = self._run(head, body=body)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("::error title=Invisible character::", result.stdout)
+                self.assertNotIn("PR model attribution required", result.stdout)
 
     def test_command_syntax_in_trailer_names_stays_inert(self) -> None:
         trailers = (

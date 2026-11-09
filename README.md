@@ -60,7 +60,7 @@ Add this to your `AGENTS.md` so agents get the disclosure and trailers right bef
 ```text
 End PR bodies with `<Job> with <model> (<effort>) in <tool> via <host>.`
 Repeat `<job> with <model> (<effort>)` joined by `and` for each model that did a job.
-Example: `Implemented with Claude Opus 5.5 (xhigh) and reviewed with GPT-6 Pro (max) in Claude Code via T3 Code.`
+Example: `Implemented with Claude Opus 5.5 (xhigh) and reviewed with GPT-6 Pro (max) in Claude Code via [T3 Code](https://t3.codes).`
 Effort is the run's reasoning setting, or `effort unknown` if nothing states it. Humans are `Human`. Ask for other unknown values.
 Keep attribution in that line: before pushing, amend agent `Co-authored-by` trailers out of your commits.
 ```
@@ -112,11 +112,14 @@ Set inputs as literals in the workflow on the default branch, never from pull re
 
 `host` is the default: every job with its model and the model's effort, the tool and the host. `effort` is the minimum: every model needs an effort; write `effort unknown` when nothing states it. `Human` needs no effort. `off` turns the check off. A line that passes a stricter level also passes the ones below it.
 
+A name may be an inline link without a title, such as `[T3 Code](https://t3.codes)`; the check reads its name. The link holds no backslash. Its URL starts with `https://` and holds no space, parenthesis, or angle or square bracket.
+
 | Last line of the PR body | `effort` | `tool` | `host` |
 | --- | :-: | :-: | :-: |
 | `Implemented with Claude Opus 5.5 (xhigh).` | ✓ | ✗ | ✗ |
 | `Implemented with Claude Opus 5.5 (xhigh) in Claude Code.` | ✓ | ✓ | ✗ |
 | `Implemented with Claude Opus 5.5 (xhigh) in Claude Code via T3 Code.` | ✓ | ✓ | ✓ |
+| `Implemented with Claude Opus 5.5 (xhigh) in Claude Code via [T3 Code](https://t3.codes).` | ✓ | ✓ | ✓ |
 | `Implemented with Claude Opus 5.5 (xhigh) and reviewed with GPT-6 Pro (max) in Claude Code via T3 Code.` | ✓ | ✓ | ✓ |
 | `Planned and implemented with Claude Opus 5.5 (max) in Claude Code via T3 Code.` | ✓ | ✓ | ✓ |
 | `Implemented with Claude Opus 5.5 (effort unknown) in Claude Code via T3 Code.` | ✓ | ✓ | ✓ |
@@ -126,6 +129,7 @@ Set inputs as literals in the workflow on the default branch, never from pull re
 | `Verified with 35 focused tests. Static checks pass.` | ✗ | ✗ | ✗ |
 | `Implemented with Claude Opus 5.5 (xhigh) and GPT-6 Pro (max) in Claude Code.` | ✗ | ✗ | ✗ |
 | `Generated with Claude Opus 5.5 for implementation in Claude Code via T3 Code.` | ✗ | ✗ | ✗ |
+| `Implemented with Claude Opus 5.5 (xhigh) in Claude Code via [T3 Code].` | ✗ | ✗ | ✗ |
 
 </details>
 
