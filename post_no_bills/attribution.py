@@ -12,6 +12,13 @@ import re
 
 
 _PLACEHOLDER_RE = re.compile(r"<[^>]*>|\[[^]]*]")
+# An inline link without a title reads as its text: `via [T3 Code](https://...)`
+# is `via T3 Code`. An image (`![...](...)`) is no link. A link holds no
+# backslash, so no escaped delimiter can end or start one. The URL also holds
+# no space, parenthesis, or angle or square bracket, so a template URL such as
+# `https://app.t3.codes/threads/<environment>/<thread>` is no link and its
+# brackets still fail as placeholders.
+_LINK_RE = re.compile(r"(?<![!\\])\[([^][\\]+)\]\(https://[^\s()<>\[\]\\]+\)")
 # Lowercase whole words. Splitting uses the spaced form (` with `, ` and `,
 # ` in `, ` via `). A name that merely contains one is still rejected: the
 # parser does not guess which occurrence was meant as a separator.
@@ -161,8 +168,9 @@ def parse(line: str) -> Parsed | str:
     """The line's fields, or the first reason it is not a valid attribution.
 
     Level requirements are not decided here: a thin line is valid, and check()
-    says when a level asks for more.
+    says when a level asks for more. Each link counts as its text.
     """
+    line = _LINK_RE.sub(r"\1", line)
     if _PLACEHOLDER_RE.search(line):
         return _PLACEHOLDER
 

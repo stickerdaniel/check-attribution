@@ -85,6 +85,16 @@ _ACCEPTED = (
     ("Implemented with Claude Opus 5.5(max).", False, False, False),
     ("Implemented with Claude Opus 5.5 (max) preview.", False, False, False),
     ("Implemented with GPT-5.6 in Claude Code via T3 Code.", False, False, False),
+    (
+        "Implemented with Claude Opus 5.5 (high) in Claude Code via [T3 Code]"
+        "(https://app.t3.codes/threads/eda0923d-4047-4351-bfe3-31ce28591e6a/"
+        "4817a552-20fd-410d-a55f-d39ff0b521a7).",
+        True,
+        True,
+        True,
+    ),
+    ("Implemented with [Claude Opus 5.5](https://claude.com/opus) (xhigh) in Claude Code.", True, True, False),
+    ("Implemented with GPT-5.6 (high) in [Zed](https://zed.dev/in/via/and?with=1#in).", True, True, False),
 )
 
 # Bodies as well as lines: check() reads the last line.
@@ -127,6 +137,16 @@ _REJECTED = (
     "Implemented with Claude Opus 5.5 (-).",
     "Implemented with Claude Opus 5.5 (a (b)).",
     "Implemented with Claude Opus 5.5 (max)) in Claude Code.",
+    "Implemented with GPT-5.6 (high) in Claude Code via [T3 Code].",
+    "Implemented with GPT-5.6 (high) in Claude Code via [T3 Code]"
+    "(https://app.t3.codes/threads/<environment>/<thread>).",
+    "Implemented with GPT-5.6 (high) in Claude Code via [](https://t3.codes).",
+    "Implemented with GPT-5.6 (high) in Claude Code via [T3 Code](http://t3.codes).",
+    "Implemented with GPT-5.6 (high) in Claude Code via ![T3 Code](https://t3.codes/logo.png).",
+    r"Implemented with GPT-5.6 (high) in Claude Code via \[T3 Code](https://t3.codes).",
+    r"Implemented with GPT-5.6 (high) in Claude Code via [T3 Code](https://t3.codes\).",
+    r"Implemented with GPT-5.6 (high) in Claude Code via [T3 Code\](https://t3.codes).",
+    "![Implemented with Human in Claude Code via T3 Code.](https://t3.codes/logo.png)",
     "",
     None,
 )
@@ -239,6 +259,12 @@ class AttributionGrammarTests(unittest.TestCase):
         self.assertEqual(
             attribution.parse("Implemented with Claude (beta) Opus (max) in T3 Code."),
             (((("Implemented",), "Claude (beta) Opus", "max"),), "T3 Code", None),
+        )
+        self.assertEqual(
+            attribution.parse(
+                "Implemented with Codex (high) in Codex CLI via [T3 Code](https://app.t3.codes/threads/e/t)."
+            ),
+            (((("Implemented",), "Codex", "high"),), "Codex CLI", "T3 Code"),
         )
 
     def test_documented_limits(self) -> None:
